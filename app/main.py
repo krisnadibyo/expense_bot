@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 import httpx
 import uvicorn
 from app.schemas.message import RequestMessage
+from app.service.openai_service import generate_response
 
 
 load_dotenv()
@@ -85,6 +86,9 @@ async def webhooks(request: Request):
             'content': message.get('text', {}).get('body') if message.get('type') == 'text' else None,
             'type': message.get('type')
           })
-          await send_message("Hai ada yang bisa saya bantu?")
-
+          await handle_message(incoming_message[0].get('content'))
   return {"message": "Webhooks Received"}
+
+async def handle_message(message: str):
+  response=generate_response(message)
+  await send_message(response)

@@ -68,5 +68,23 @@ async def webhooks(request: Request):
 @app.post("/webhooks")
 async def webhooks(request: Request):
   data=await request.json()
-  print(data)
+  if data.get('object') != 'whatsapp_business_account':
+      return {'success': False, 'message': 'Not a WhatsApp webhook'}
+  
+  incoming_message = []
+  for entry in data.get("entry", []):
+    for change in entry.get("changes", []):
+      value = change.get("value")
+      # Check for incoming messages from clients
+      if 'messages' in value and value['messages']:
+        for message in value['messages']:
+          incoming_message.append({
+            'from': message.get('from'),
+            'message_id': message.get('id'),
+            'timestamp': message.get('timestamp'),
+            'content': message.get('text', {}).get('body') if message.get('type') == 'text' else None,
+            'type': message.get('type')
+          })
+          await send_message("Hai ada yang bisa saya bantu?")
+
   return {"message": "Webhooks Received"}
